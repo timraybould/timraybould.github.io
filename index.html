@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Duck vs Cookies</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Duck vs Cookies</h1>
+<canvas id="gameCanvas" width="500" height="500"></canvas>
+<div id="timer">Time: 20</div>
+<div id="blockedCookies">Blocked Cookies: 0</div>
+
+<script>
+// Initialize canvas and context
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Load images
+const duckImage = new Image();
+duckImage.src = 'duck.png';
+const cookieImage = new Image();
+cookieImage.src = 'cookie.png';
+
+// Initialize game variables
+let duckY = 250;
+const duckHeight = 50;
+const duckWidth = 50;
+const cookieWidth = 30;
+const cookieHeight = 30;
+let cookies = [];
+let blockedCookies = 0;
+let remainingTime = 20; // in seconds
+
+// Update timer and blocked cookies elements
+const timerElement = document.getElementById("timer");
+const blockedCookiesElement = document.getElementById("blockedCookies");
+
+let timerInterval; // Declare variable for the timer interval
+
+// Handle key events to move the duck
+document.addEventListener('keydown', (e) => {
+    const moveAmount = 20;
+    if (e.key === 'ArrowUp') duckY -= moveAmount;
+    if (e.key === 'ArrowDown') duckY += moveAmount;
+});
+
+// Timer function
+function updateTimer() {
+    remainingTime -= 1;
+    timerElement.innerText = "Time: " + remainingTime;
+    if (remainingTime <= 0) {
+        clearInterval(timerInterval); // Stop the timer
+        alert(`Game Over. Score: ${blockedCookies}`);
+    }
+}
+
+    // Main game loop
+    function gameLoop() {
+        if (remainingTime <= 0) return; // End the game loop
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // Draw duck
+        ctx.drawImage(duckImage, 0, duckY, duckWidth, duckHeight)
+
+        // Generate cookies randomly
+        if (Math.random() < 0.05) {
+            const newCookieY = Math.random() * (canvas.height - cookieHeight)
+            cookies.push({ x: canvas.width, y: newCookieY })
+        }
+
+        // Draw and move cookies
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i]
+            ctx.drawImage(cookieImage, cookie.x, cookie.y, cookieWidth, cookieHeight)
+            cookie.x -= 5
+
+            // Collision detection
+            if (
+                cookie.x < duckWidth &&
+                cookie.y + cookieHeight > duckY &&
+                cookie.y < duckY + duckHeight
+            ) {
+                // Remove collided cookie and update counter
+                cookies.splice(i, 1)
+                i--
+                blockedCookies++
+                blockedCookiesElement.innerText = "Blocked Cookies: " + blockedCookies
+            }
+        }
+
+        // Remove offscreen cookies
+        cookies = cookies.filter(cookie => cookie.x + cookieWidth > 0)
+
+        // Repeat
+        requestAnimationFrame(gameLoop)
+    }
+
+    // Start timer and game loop
+    timerInterval = setInterval(updateTimer, 1000);
+    gameLoop()
+</script>
+
+</body>
+</html>
